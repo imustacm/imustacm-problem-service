@@ -3,6 +3,7 @@ package cn.imustacm.problem.mapper;
 
 import cn.imustacm.problem.model.Problem;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Mapper;
 
 /**
  * <p>
@@ -12,6 +13,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  * @author liandong
  * @since 2019-09-10
  */
+@Mapper
 public interface ProblemMapper extends BaseMapper<Problem> {
 
 }
