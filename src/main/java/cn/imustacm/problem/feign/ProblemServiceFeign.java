@@ -18,8 +18,7 @@ public class ProblemServiceFeign implements IProblemService {
     @Override
     public Resp addProblem(Problem problem) {
         log.info("addProblem begin! problem:{}", problem);
-        boolean b = problemService.saveOrUpdate(problem);
-        return Resp.ok();
+        return Resp.ok(problemService.saveOrUpdate(problem));
     }
 
     @Override
