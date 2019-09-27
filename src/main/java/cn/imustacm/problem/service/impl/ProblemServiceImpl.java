@@ -1,5 +1,6 @@
 package cn.imustacm.problem.service.impl;
 
+import cn.imustacm.problem.dto.ProblemListDTO;
 import cn.imustacm.problem.mapper.ProblemMapper;
 import cn.imustacm.problem.model.Problem;
 import cn.imustacm.problem.service.ProblemService;
@@ -26,7 +27,7 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem> impl
     @Autowired
     private ProblemMapper problemMapper;
 
-    public List<Problem> getProblemByPage(Integer pageIndex, Integer pageSize) {
+    public List<ProblemListDTO> getProblemByPage(Integer pageIndex, Integer pageSize) {
         return problemMapper.getProblemByPage(pageIndex, pageSize);
     }
 

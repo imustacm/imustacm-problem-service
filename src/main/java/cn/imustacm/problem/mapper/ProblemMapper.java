@@ -1,6 +1,7 @@
 package cn.imustacm.problem.mapper;
 
 
+import cn.imustacm.problem.dto.ProblemListDTO;
 import cn.imustacm.problem.model.Problem;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
@@ -24,7 +25,7 @@ public interface ProblemMapper extends BaseMapper<Problem> {
 
     @Select(
         "<script>"
-            + "SELECT * FROM problem "
+            + "SELECT id, title, difficulty, source, problem_type, submit_number, accepted_number FROM problem "
             + "<where> "
                 +"( id BETWEEN ( #{pageIndex} - 1 ) * #{pageSize} + 1 AND #{pageIndex} * #{pageSize} ) AND visible = TRUE AND id NOT IN ( "
                     + "SELECT problem_id FROM contest_problem "
@@ -40,7 +41,7 @@ public interface ProblemMapper extends BaseMapper<Problem> {
             + "</where>"
       + "</script>"
     )
-    List<Problem> getProblemByPage(@Param("pageIndex")Integer pageIndex, @Param("pageSize")Integer pageSize);
+    List<ProblemListDTO> getProblemByPage(@Param("pageIndex")Integer pageIndex, @Param("pageSize")Integer pageSize);
 
     @Select(
         "<script>"
