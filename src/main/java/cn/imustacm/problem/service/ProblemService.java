@@ -1,6 +1,7 @@
 package cn.imustacm.problem.service;
 
 
+import cn.imustacm.problem.dto.ProblemListDTO;
 import cn.imustacm.problem.mapper.ProblemMapper;
 import cn.imustacm.problem.model.Problem;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -26,7 +27,7 @@ public interface ProblemService extends IService<Problem> {
      * @param pageSize
      * @return
      */
-    List<Problem> getProblemByPage(Integer pageIndex, Integer pageSize);
+    List<ProblemListDTO> getProblemByPage(Integer pageIndex, Integer pageSize);
 
 
     /**
