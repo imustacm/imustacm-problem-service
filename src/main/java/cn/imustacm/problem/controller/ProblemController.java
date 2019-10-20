@@ -1,6 +1,7 @@
 package cn.imustacm.problem.controller;
 
 import cn.imustacm.common.domain.Resp;
+import cn.imustacm.problem.client.UserClient;
 import cn.imustacm.problem.dto.ProblemListDTO;
 import cn.imustacm.problem.dto.ProblemToTagDTO;
 import cn.imustacm.problem.model.Problem;
@@ -11,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.text.DecimalFormat;
@@ -36,6 +38,9 @@ public class ProblemController {
     @Autowired
     private ProblemToTagService problemToTagService;
 
+    @Autowired
+    private UserClient userClient;
+
     /**
      * 分页获取题目列表
      */
@@ -53,8 +58,8 @@ public class ProblemController {
         List<ProblemToTagDTO> problemToTagDTOs = problemToTagService.getProblemToTag(
                 problemListDTO.get(0).getId(), problemListDTO.get(problemListDTO.size() - 1).getId());
         DecimalFormat df = new DecimalFormat("###0.00");
-        for(int i = 0; i < problemListDTO.size(); i++) {
-            if(problemListDTO.get(i).getSubmitNumber().equals(0)){
+        for (int i = 0; i < problemListDTO.size(); i++) {
+            if (problemListDTO.get(i).getSubmitNumber().equals(0)) {
                 problemListDTO.get(i).setAcceptedPercent(df.format(0) + "%");
             } else {
                 problemListDTO.get(i).setAcceptedPercent(
@@ -62,8 +67,8 @@ public class ProblemController {
                                 / Double.valueOf(problemListDTO.get(i).getSubmitNumber()) * 100) + "%");
             }
             List<ProblemToTagDTO> problemToTagDTOItems = new ArrayList<ProblemToTagDTO>();
-            for(int j = 0; j < problemToTagDTOs.size(); j++) {
-                if(problemToTagDTOs.get(j).getProblemId().equals(problemListDTO.get(i).getId())) {
+            for (int j = 0; j < problemToTagDTOs.size(); j++) {
+                if (problemToTagDTOs.get(j).getProblemId().equals(problemListDTO.get(i).getId())) {
                     problemToTagDTOItems.add(problemToTagDTOs.get(j));
                 }
             }
@@ -73,5 +78,16 @@ public class ProblemController {
         Page<ProblemListDTO> result = new Page<>(pageIndex, problemListDTO.size(), problemNumber);
         result.setRecords(problemListDTO);
         return Resp.ok(result);
+    }
+
+    /**
+     * 测试feign调用user服务
+     *
+     * @param userId
+     * @return
+     */
+    @GetMapping("ceshi")
+    public Resp ceshiFeign(@RequestParam("userId") Long userId) {
+        return Resp.ok(userClient.getUser(userId));
     }
 }
