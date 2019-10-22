@@ -1,5 +1,6 @@
 server:
   port: 9090
+
 spring:
   application:
     name: imust-user-service
@@ -9,6 +10,10 @@ spring:
       username: [username]
       password: [password]
       driver-class-name: org.postgresql.Driver
+  security:
+      user:
+        name: [name]
+        password: [password]
 
   redis:
     database: [database]
@@ -27,3 +32,8 @@ mybatis-plus:
   global-config:
     db-config:
       id-type: auto
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://${spring.security.user.name}:${spring.security.user.password}@localhost:6868/eureka
