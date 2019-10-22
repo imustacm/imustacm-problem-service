@@ -1,27 +1,25 @@
 package cn.imustacm.problem.controller;
 
 import cn.imustacm.common.domain.Resp;
+import cn.imustacm.common.enums.ErrorCodeEnum;
+import cn.imustacm.common.utils.OkHttpUtil;
+import cn.imustacm.common.utils.SecretUtils;
 import cn.imustacm.problem.client.UserClient;
 import cn.imustacm.problem.dto.ProblemListDTO;
 import cn.imustacm.problem.dto.ProblemToTagDTO;
-import cn.imustacm.problem.model.Problem;
+import cn.imustacm.problem.dto.SubmitCodeDTO;
+import cn.imustacm.problem.model.JudgeServer;
+import cn.imustacm.problem.service.JudgeServerService;
 import cn.imustacm.problem.service.ProblemService;
 import cn.imustacm.problem.service.ProblemToTagService;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
+import java.util.*;
 
 /**
  * @author wangjianli
@@ -33,13 +31,13 @@ import java.util.stream.Collectors;
 public class ProblemController {
 
     @Autowired
+    private UserClient userClient;
+    @Autowired
     private ProblemService problemService;
-
     @Autowired
     private ProblemToTagService problemToTagService;
-
     @Autowired
-    private UserClient userClient;
+    private JudgeServerService judgeServerService;
 
     /**
      * 分页获取题目列表
@@ -89,5 +87,38 @@ public class ProblemController {
     @GetMapping("ceshi")
     public Resp ceshiFeign(@RequestParam("userId") Long userId) {
         return Resp.ok(userClient.getUser(userId));
+    }
+
+    /**
+     * 提交代码
+     */
+    @PostMapping("/submitCode")
+    public Resp submitCode(@RequestBody SubmitCodeDTO submitCodeDTO) {
+        if(submitCodeDTO.getLanguage() == null || "".equals(submitCodeDTO.getLanguage()))
+            return Resp.fail(ErrorCodeEnum.PROBLEM_SUBMIT_LANGUAGE_NULL);
+        if(submitCodeDTO.getCode() == null || "".equals(submitCodeDTO.getCode()))
+            return Resp.fail(ErrorCodeEnum.PROBLEM_SUBMIT_CODE_NULL);
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("language", submitCodeDTO.getLanguage());
+        jsonObject.put("src", submitCodeDTO.getCode());
+        jsonObject.put("max_cpu_time", 1000);  //先写死
+        jsonObject.put("max_memory", 6020);  //先写死
+        jsonObject.put("problem_id", String.valueOf(submitCodeDTO.getProblem_id()));
+        jsonObject.put("output", false);
+
+        JudgeServer judgeServer = judgeServerService.getJudgeServer();
+        List<Map> maps = new ArrayList<>();
+        Map<String, String> map = new HashMap<>();
+        map.put("key", "X-Judge-Server-Token");
+        map.put("value", SecretUtils.getSHA256(judgeServer.getToken()));
+        maps.add(map);
+        String back = OkHttpUtil.postJsonParams(judgeServer.getHost() + "judge", jsonObject.toJSONString(), maps);
+        JSONObject result = new JSONObject();
+        try {
+            result = JSONObject.parseObject(back);
+        } catch (Exception e) {
+            return Resp.fail(ErrorCodeEnum.PROBLEM_SUBMIT_SERVER_ERROR);
+        }
+        return Resp.ok(result);
     }
 }

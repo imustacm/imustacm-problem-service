@@ -7,4 +7,5 @@ import org.springframework.cloud.openfeign.FeignClient;
 
 @FeignClient(ServiceIdConst.IMUSTACM_USER_SERVICE)
 public interface UserClient extends IUsersService {
+
 }
