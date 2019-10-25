@@ -226,25 +226,36 @@ public class ProblemController {
             int wrongNum = 0;
             if(judge.size() < 1)
                 return Resp.fail(ErrorCodeEnum.PROBLEM_TESTDATA_NOT_EXIST);
+            JSONArray ja = new JSONArray();
             for(int i = 0; i < judge.size(); i++) {
-                JSONObject judgeChild = (JSONObject) judge.get(i);
+                JSONObject judgeChild = JSONObject.parseObject(JSONObject.toJSONString(judge.get(i)));
                 int resCode = judgeChild.getInteger("result");
                 if(resCode != 0) {
                     wrongNum++;
                     if(resCode > finalCode) {
                         finalCode = resCode;
                     }
+                    JSONObject js = new JSONObject();
+                    js.put("test_case", judgeChild.getString("test_case"));
+                    js.put("result", judgeChild.getInteger("result"));
+                    js.put("cpu_time", judgeChild.getInteger("cpu_time"));
+                    js.put("real_time", judgeChild.getInteger("real_time"));
+                    js.put("memory", judgeChild.getInteger("memory"));
+                    ja.add(js);
                 }
             }
             Submission submission = new Submission();
             submission.setId(submitId);
-            if(finalCode == -99)
-                submission.setResult(0);
-            else
-                submission.setResult(finalCode);
-            submission.setInfo(judge.toJSONString());
             submission.setJudgeTime(LocalDateTime.now());
-            submission.setPassRate((int)(wrongNum * 1.0 /judge.size() * 100));
+            if(finalCode == -99) {
+                submission.setResult(0);
+                submission.setPassRate(100);
+            }
+            else {
+                submission.setResult(finalCode);
+                submission.setPassRate((int)((judge.size() - wrongNum) * 1.0 /judge.size() * 100));
+                submission.setStatisticInfo(ja.toJSONString());
+            }
             submissionService.updateById(submission);
         } else {
             String path = "/judger/run/" + submitInfoDTO.getJudge_id() +"/";
