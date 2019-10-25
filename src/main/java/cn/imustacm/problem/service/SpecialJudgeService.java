@@ -13,4 +13,12 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface SpecialJudgeService extends IService<SpecialJudge> {
 
+    /**
+     * 根据题目编号查询spj信息
+     *
+     * @param problem_id
+     * @return
+     */
+    SpecialJudge getByProblemId(Integer problem_id);
+
 }
