@@ -4,9 +4,7 @@ import cn.imustacm.problem.model.ContestUserGroup;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
- * <p>
- *  服务类
- * </p>
+ * 服务类
  *
  * @author liandong
  * @since 2019-10-11

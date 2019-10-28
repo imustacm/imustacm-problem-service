@@ -11,9 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.List;
 
 /**
- * <p>
- *  服务类
- * </p>
+ * 服务类
  *
  * @author liandong
  * @since 2019-09-10
@@ -27,8 +25,7 @@ public interface ProblemService extends IService<Problem> {
      * @param pageSize
      * @return
      */
-    List<ProblemListDTO> getProblemByPage(Integer pageIndex, Integer pageSize);
-
+    List<ProblemListDTO> getProblemsByPage(Integer pageIndex, Integer pageSize);
 
     /**
      * 获取题目总数
@@ -36,5 +33,13 @@ public interface ProblemService extends IService<Problem> {
      * @return
      */
     Integer getProblemTotalNumber();
+
+    /**
+     * 根据id获取题目信息
+     *
+     * @param id
+     * @return
+     */
+    Problem getProblemById(Integer id);
 
 }
