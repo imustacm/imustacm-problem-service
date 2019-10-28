@@ -6,14 +6,8 @@ import cn.imustacm.common.utils.OkHttpUtil;
 import cn.imustacm.common.utils.RedisUtils;
 import cn.imustacm.common.utils.SecretUtils;
 import cn.imustacm.problem.client.UserClient;
-import cn.imustacm.problem.dto.ProblemListDTO;
-import cn.imustacm.problem.dto.ProblemToTagDTO;
-import cn.imustacm.problem.dto.SubmitCodeDTO;
-import cn.imustacm.problem.dto.SubmitInfoDTO;
-import cn.imustacm.problem.model.JudgeServer;
-import cn.imustacm.problem.model.Problem;
-import cn.imustacm.problem.model.SpecialJudge;
-import cn.imustacm.problem.model.Submission;
+import cn.imustacm.problem.dto.*;
+import cn.imustacm.problem.model.*;
 import cn.imustacm.problem.service.*;
 import cn.imustacm.user.model.Option;
 import com.alibaba.fastjson.JSONArray;
@@ -29,6 +23,7 @@ import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * @author wangjianli
@@ -46,6 +41,10 @@ public class ProblemController {
     @Autowired
     private ProblemToTagService problemToTagService;
     @Autowired
+    private ProblemTagService problemTagService;
+    @Autowired
+    private ProblemFunctionService problemFunctionService;
+    @Autowired
     private JudgeServerService judgeServerService;
     @Autowired
     private SubmissionService submissionService;
@@ -59,13 +58,13 @@ public class ProblemController {
     /**
      * 分页获取题目列表
      */
-    @GetMapping("/listProblem")
-    public Resp getProblemList(Integer pageIndex, Integer pageSize) {
+    @GetMapping("/listProblems")
+    public Resp listProblems(Integer pageIndex, Integer pageSize) {
         if (Objects.isNull(pageIndex) || Objects.isNull(pageSize)) {
             pageIndex = 1;
             pageSize = 100;
         }
-        List<ProblemListDTO> problemListDTO = problemService.getProblemByPage(pageIndex, pageSize);
+        List<ProblemListDTO> problemListDTO = problemService.getProblemsByPage(pageIndex, pageSize);
         Integer problemNumber = problemService.getProblemTotalNumber();
         if (CollectionUtils.isEmpty(problemListDTO)) {
             return Resp.ok(new Page<>(pageIndex, 0, problemNumber));
@@ -94,17 +93,6 @@ public class ProblemController {
         result.setRecords(problemListDTO);
         return Resp.ok(result);
     }
-
-    /**
-     * 测试feign调用user服务
-     *
-     * @param userId
-     * @return
-     */
-    //@GetMapping("ceshi")
-    //public Resp ceshiFeign(@RequestParam("userId") Long userId) {
-        //return Resp.ok(userClient.getUser(userId));
-    //}
 
     /**
      * 提交代码
@@ -139,6 +127,8 @@ public class ProblemController {
         jsonObject.put("problem_id", String.valueOf(submitCodeDTO.getProblem_id()));
         jsonObject.put("notify_url", value.getString("backurl"));
         jsonObject.put("output", false);
+        jsonObject.put("io_mode", false);
+        //jsonObject.put("test_case", "");
         String problemType = Integer.toBinaryString(problem.getProblemType());
         int length = problemType.length();
         char spjFlag = '0';
@@ -159,8 +149,6 @@ public class ProblemController {
                     jsonObject.put("spj_src", specialJudge.getCode());
             }
         }
-        //jsonObject.put("test_case", "");
-        //jsonObject.put("io_mode", "");
 
         JudgeServer judgeServer = judgeServerService.getJudgeServer();
         List<Map> maps = new ArrayList<>();
@@ -207,8 +195,8 @@ public class ProblemController {
     /**
      * 判题机回调
      */
-    @PostMapping("/getSubmitInfo")
-    public Resp getSubmitInfo(@RequestBody SubmitInfoDTO submitInfoDTO) {
+    @PostMapping("/getSubmissionInfo")
+    public Resp getSubmissionInfo(@RequestBody SubmitInfoDTO submitInfoDTO) {
         if(submitInfoDTO.getErr() != null && !"".equals(submitInfoDTO.getErr()))
             return Resp.fail(ErrorCodeEnum.PROBLEM_SUBMIT_SERVER_ERROR);
         if(submitInfoDTO.getJudge_id() == null && "".equals(submitInfoDTO.getJudge_id()))
@@ -270,4 +258,87 @@ public class ProblemController {
         redisTemplate.delete(key);
         return Resp.ok("任务处理成功");
     }
+
+    /**
+     * 获取题目详情
+     */
+    @GetMapping("/getProblem")
+    public Resp getProblem(String problem_id) {
+        if(problem_id == null && "".equals(problem_id))
+            return Resp.fail(ErrorCodeEnum.BIZ_PARAM_ERR);
+        Problem problem = new Problem();
+        ProblemFunction problemFunction = new ProblemFunction();
+        List<ProblemToTagDTO> tags = new ArrayList<>();
+        try {
+            Integer id = Integer.valueOf(problem_id);
+            Problem tempProblem = problemService.getProblemById(id);
+            if(tempProblem == null)
+                return Resp.fail(ErrorCodeEnum.PROBLEM_NOT_EXIST);
+            problem = tempProblem;
+            List<ProblemToTagDTO> tempTags = problemToTagService.getProblemToTag(id, id);
+            if(tempTags != null && tempTags.size() > 0)
+                tags = tempTags;
+            String problemType = Integer.toBinaryString(problem.getProblemType());
+            int length = problemType.length();
+            char functionFlag = '0';
+            if(length > 2)
+                functionFlag = problemType.charAt(length - 3);
+            if(functionFlag == '1') {
+                ProblemFunction tempProblemFunction = problemFunctionService.getProblemFunctionByProblem(id);
+                if(tempProblemFunction != null)
+                    problemFunction = tempProblemFunction;
+            }
+        } catch (Exception e) {
+            return Resp.fail(ErrorCodeEnum.BIZ_PARAM_ERR);
+        }
+        return Resp.ok(ProblemDTO.builder().problem(problem).tags(tags).problemFunction(problemFunction).build());
+    }
+
+    /**
+     * 获取所有题目标签
+     */
+    @GetMapping("/listTags")
+    public Resp listTags() {
+        return Resp.ok(problemTagService.listTags());
+    }
+
+    /**
+     * 获取所有提交信息
+     */
+    @GetMapping("/listSubmissions")
+    public Resp listSubmissions(Integer pageIndex, Integer pageSize) {
+        if (Objects.isNull(pageIndex) || Objects.isNull(pageSize)) {
+            pageIndex = 1;
+            pageSize = 100;
+        }
+        Page<Submission> page = submissionService.getList(pageIndex, pageSize);
+        List<Submission> submissionList = page.getRecords();
+        Integer submissionNumber = submissionService.getListCount();
+        if (CollectionUtils.isEmpty(submissionList)) {
+            return Resp.ok(new Page<>(pageIndex, 0, submissionNumber));
+        }
+        // 实体类转换成dto
+        List<SubmissionDTO> submissionDTOList = submissionList.stream()
+                .map(submission -> SubmissionDTO
+                        .builder()
+                        .id(submission.getId())
+                        .problemId(submission.getProblemId())
+                        .contestId(submission.getContestId())
+                        .userId(submission.getUserId())
+                        .createTime(submission.getCreateTime())
+                        .result(submission.getResult())
+                        .language(submission.getLanguage())
+                        .codeShare(submission.getCodeShare())
+                        .ip(submission.getIp())
+                        .judgeServer(submission.getJudgeServer())
+                        .judgeTime(submission.getJudgeTime())
+                        .passRate(submission.getPassRate())
+                        .build())
+                .collect(Collectors.toList());
+        // 将dto集合封装到分页对象
+        Page<SubmissionDTO> result = new Page<>(page.getCurrent(), submissionDTOList.size(), submissionNumber);
+        result.setRecords(submissionDTOList);
+        return Resp.ok(result);
+    }
+
 }

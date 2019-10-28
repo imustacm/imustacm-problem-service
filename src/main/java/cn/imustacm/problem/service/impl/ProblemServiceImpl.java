@@ -14,9 +14,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 /**
- * <p>
- *  服务实现类
- * </p>
+ * 服务实现类
  *
  * @author liandong
  * @since 2019-09-10
@@ -27,11 +25,15 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem> impl
     @Autowired
     private ProblemMapper problemMapper;
 
-    public List<ProblemListDTO> getProblemByPage(Integer pageIndex, Integer pageSize) {
-        return problemMapper.getProblemByPage(pageIndex, pageSize);
+    public List<ProblemListDTO> getProblemsByPage(Integer pageIndex, Integer pageSize) {
+        return problemMapper.getProblemsByPage(pageIndex, pageSize);
     }
 
     public Integer getProblemTotalNumber() {
         return problemMapper.getProblemTotalNumber();
+    }
+
+    public Problem getProblemById(Integer id) {
+        return problemMapper.getProblemById(id);
     }
 }

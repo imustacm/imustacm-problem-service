@@ -13,8 +13,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 /**
- *
- *  Mapper 接口
+ * Mapper 接口
  *
  * @author wangjianli
  * @since 2019-10-09

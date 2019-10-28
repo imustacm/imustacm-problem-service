@@ -8,9 +8,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import java.util.List;
 
 /**
- * <p>
- *  服务类
- * </p>
+ * 服务类
  *
  * @author liandong
  * @since 2019-09-10
