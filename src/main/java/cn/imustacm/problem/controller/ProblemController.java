@@ -9,6 +9,7 @@ import cn.imustacm.problem.client.UserClient;
 import cn.imustacm.problem.dto.*;
 import cn.imustacm.problem.model.*;
 import cn.imustacm.problem.service.*;
+import cn.imustacm.user.dto.RankListDTO;
 import cn.imustacm.user.model.Option;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -22,8 +23,9 @@ import org.springframework.web.bind.annotation.*;
 import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import static cn.imustacm.common.consts.DatePatternConst.DATE_TIME_FORMATTER;
 
 /**
  * @author wangjianli
@@ -169,7 +171,9 @@ public class ProblemController {
         if(submitCodeDTO.getContest_id() != null || !"".equals(submitCodeDTO.getContest_id()))
             submission.setContestId(submitCodeDTO.getContest_id());
         submission.setUserId(1);  //先写死
-        submission.setCreateTime(LocalDateTime.now());
+        LocalDateTime localDateTime = LocalDateTime
+                .parse(LocalDateTime.now().format(DATE_TIME_FORMATTER), DATE_TIME_FORMATTER);
+        submission.setCreateTime(localDateTime);
         submission.setCode(submitCodeDTO.getCode());
         submission.setResult(10);
         submission.setLanguage(submitCodeDTO.getLanguage().toLowerCase());
@@ -212,29 +216,37 @@ public class ProblemController {
             JSONArray judge = result.getJSONArray("judge_result");
             int finalCode = -99;
             int wrongNum = 0;
+            long cpuTime = 0;
+            long realTime = 0;
+            long memory = 0;
             if(judge.size() < 1)
                 return Resp.fail(ErrorCodeEnum.PROBLEM_TESTDATA_NOT_EXIST);
-            JSONArray ja = new JSONArray();
             for(int i = 0; i < judge.size(); i++) {
                 JSONObject judgeChild = JSONObject.parseObject(JSONObject.toJSONString(judge.get(i)));
                 int resCode = judgeChild.getInteger("result");
+                long cpu_time = judgeChild.getInteger("cpu_time");
+                long real_time = judgeChild.getInteger("real_time");
+                long use_memory = judgeChild.getInteger("memory");
                 if(resCode != 0) {
                     wrongNum++;
-                    if(resCode > finalCode) {
+                    if(resCode > finalCode)
                         finalCode = resCode;
-                    }
-                    JSONObject js = new JSONObject();
-                    js.put("test_case", judgeChild.getString("test_case"));
-                    js.put("result", judgeChild.getInteger("result"));
-                    js.put("cpu_time", judgeChild.getInteger("cpu_time"));
-                    js.put("real_time", judgeChild.getInteger("real_time"));
-                    js.put("memory", judgeChild.getInteger("memory"));
-                    ja.add(js);
                 }
+                if(cpu_time > cpuTime)
+                    cpuTime = cpu_time;
+                if(real_time > realTime)
+                    realTime = real_time;
+                if(use_memory > memory)
+                    memory = use_memory;
             }
             Submission submission = new Submission();
             submission.setId(submitId);
-            submission.setJudgeTime(LocalDateTime.now());
+            LocalDateTime localDateTime = LocalDateTime
+                    .parse(LocalDateTime.now().format(DATE_TIME_FORMATTER), DATE_TIME_FORMATTER);
+            submission.setJudgeTime(localDateTime);
+            submission.setCpuTime(cpuTime);
+            submission.setRealTime(realTime);
+            submission.setMemory(memory);
             if(finalCode == -99) {
                 submission.setResult(0);
                 submission.setPassRate(100);
@@ -242,7 +254,6 @@ public class ProblemController {
             else {
                 submission.setResult(finalCode);
                 submission.setPassRate((int)((judge.size() - wrongNum) * 1.0 /judge.size() * 100));
-                submission.setStatisticInfo(ja.toJSONString());
             }
             submissionService.updateById(submission);
         } else {
@@ -251,7 +262,9 @@ public class ProblemController {
             submission.setId(submitId);
             submission.setResult(7);
             submission.setStatisticInfo(result.getString("msg").replace(path, ""));
-            submission.setJudgeTime(LocalDateTime.now());
+            LocalDateTime localDateTime = LocalDateTime
+                    .parse(LocalDateTime.now().format(DATE_TIME_FORMATTER), DATE_TIME_FORMATTER);
+            submission.setJudgeTime(localDateTime);
             submission.setPassRate(0);
             submissionService.updateById(submission);
         }
@@ -336,9 +349,17 @@ public class ProblemController {
                         .build())
                 .collect(Collectors.toList());
         // 将dto集合封装到分页对象
-        Page<SubmissionDTO> result = new Page<>(page.getCurrent(), submissionDTOList.size(), submissionNumber);
+        Page<SubmissionDTO> result = new Page<>(page.getCurrent(), submissionDTOList.size(), page.getTotal());
         result.setRecords(submissionDTOList);
         return Resp.ok(result);
     }
 
+    /**
+     * 获取解题排名
+     */
+    @GetMapping("/listRank")
+    public Resp listRank(Integer pageIndex, Integer pageSize) {
+        Page<RankListDTO> users = userClient.getRankList(pageIndex, pageSize);
+        return Resp.ok(users);
+    }
 }
