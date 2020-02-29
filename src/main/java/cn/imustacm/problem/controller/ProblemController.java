@@ -61,7 +61,8 @@ public class ProblemController {
      * 分页获取题目列表
      */
     @GetMapping("/listProblems")
-    public Resp listProblems(Integer pageIndex, Integer pageSize) {
+    public Resp listProblems(@RequestHeader(value = "user_id",required = false) Long userId,
+                             Integer pageIndex, Integer pageSize) {
         if (Objects.isNull(pageIndex) || Objects.isNull(pageSize)) {
             pageIndex = 1;
             pageSize = 100;
