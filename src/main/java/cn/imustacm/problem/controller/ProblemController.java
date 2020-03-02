@@ -362,4 +362,15 @@ public class ProblemController {
         Page<RankListDTO> users = userClient.getRankList(pageIndex, pageSize);
         return Resp.ok(users);
     }
+
+    /**
+     * 新增或者修改 题目
+     *
+     * @param problem
+     * @return
+     */
+    @PostMapping("save")
+    public Resp saveProblem(@RequestBody Problem problem) {
+        return Resp.okOrFail(problemService.saveOrUpdate(problem));
+    }
 }
