@@ -1,5 +1,6 @@
 package cn.imustacm.problem.controller;
 
+import cn.imustacm.common.consts.GlobalConst;
 import cn.imustacm.common.domain.Resp;
 import cn.imustacm.common.enums.ErrorCodeEnum;
 import cn.imustacm.common.utils.OkHttpUtil;
@@ -33,6 +34,7 @@ import static cn.imustacm.common.consts.DatePatternConst.DATE_TIME_FORMATTER;
  */
 
 @RestController
+@CrossOrigin
 @RequestMapping("/problem")
 public class ProblemController {
 
@@ -100,7 +102,7 @@ public class ProblemController {
      * 提交代码
      */
     @PostMapping("/submitCode")
-    public Resp submitCode(@RequestBody SubmitCodeDTO submitCodeDTO) {
+    public Resp submitCode(@RequestBody SubmitCodeDTO submitCodeDTO, @RequestHeader(value = GlobalConst.USER_ID_HEADER, required = false) Integer userId) {
         if(submitCodeDTO.getLanguage() == null || "".equals(submitCodeDTO.getLanguage()))
             return Resp.fail(ErrorCodeEnum.PROBLEM_SUBMIT_LANGUAGE_NULL);
         Option option = userClient.getByKey("language");
@@ -170,7 +172,7 @@ public class ProblemController {
         submission.setProblemId(submitCodeDTO.getProblem_id());
         if(submitCodeDTO.getContest_id() != null || !"".equals(submitCodeDTO.getContest_id()))
             submission.setContestId(submitCodeDTO.getContest_id());
-        submission.setUserId(1);  //先写死
+        submission.setUserId(userId);  //先写死
         LocalDateTime localDateTime = LocalDateTime
                 .parse(LocalDateTime.now().format(DATE_TIME_FORMATTER), DATE_TIME_FORMATTER);
         submission.setCreateTime(localDateTime);
