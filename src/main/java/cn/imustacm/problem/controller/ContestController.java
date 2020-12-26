@@ -1,6 +1,7 @@
 package cn.imustacm.problem.controller;
 
 import cn.imustacm.common.domain.Resp;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,6 +14,7 @@ import java.util.Objects;
  */
 
 @RestController
+@CrossOrigin
 @RequestMapping("/contest")
 public class ContestController {
 
