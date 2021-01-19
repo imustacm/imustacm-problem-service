@@ -34,7 +34,6 @@ import static cn.imustacm.common.consts.DatePatternConst.DATE_TIME_FORMATTER;
  */
 
 @RestController
-@CrossOrigin
 @RequestMapping("/problem")
 public class ProblemController {
 
