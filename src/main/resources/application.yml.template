@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: imust-user-service
+    name: imust-problem-service
   datasource:
     druid:
       url: jdbc:postgresql://[host]:[port]/[database]?useUnicode=true&characterEncoding=UTF-8
