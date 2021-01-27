@@ -34,7 +34,6 @@ import static cn.imustacm.common.consts.DatePatternConst.DATE_TIME_FORMATTER;
  */
 
 @RestController
-@CrossOrigin
 @RequestMapping("/problem")
 public class ProblemController {
 
@@ -78,11 +77,11 @@ public class ProblemController {
         DecimalFormat df = new DecimalFormat("###0.00");
         for (int i = 0; i < problemListDTO.size(); i++) {
             if (problemListDTO.get(i).getSubmitNumber().equals(0)) {
-                problemListDTO.get(i).setAcceptedPercent(df.format(0) + "%");
+                problemListDTO.get(i).setAcceptedPercent(df.format(0));
             } else {
                 problemListDTO.get(i).setAcceptedPercent(
                         df.format(Double.valueOf(problemListDTO.get(i).getAcceptedNumber())
-                                / Double.valueOf(problemListDTO.get(i).getSubmitNumber()) * 100) + "%");
+                                / Double.valueOf(problemListDTO.get(i).getSubmitNumber()) * 100));
             }
             List<ProblemToTagDTO> problemToTagDTOItems = new ArrayList<ProblemToTagDTO>();
             for (int j = 0; j < problemToTagDTOs.size(); j++) {
