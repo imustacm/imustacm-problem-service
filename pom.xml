@@ -74,7 +74,7 @@
         <dependency>
             <groupId>cn.imustacm</groupId>
             <artifactId>imustacm-user-api</artifactId>
-            <version>${imustacm-problem-api}</version>
+            <version>${imustacm-user-api}</version>
         </dependency>
         <dependency>
             <groupId>com.alibaba</groupId>
